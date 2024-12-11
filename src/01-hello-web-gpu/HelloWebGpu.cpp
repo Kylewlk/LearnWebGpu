@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <webgpu/webgpu_cpp.h>
-
+#include <dawn/webgpu_cpp_print.h>
 
 int main()
 {
@@ -28,7 +28,7 @@ int main()
                                WGPUAdapter adapter, WGPUStringView message,
                                void *userdata) {
         if (status != WGPURequestAdapterStatus_Success) {
-            // std::cerr << "Failed to get an adapter:" << message;
+            std::cerr << "Failed to get an adapter:" << message.data << std::endl;
             return;
         }
         *static_cast<wgpu::Adapter *>(userdata) = wgpu::Adapter::Acquire(adapter);
@@ -47,11 +47,11 @@ int main()
 
     adapter.GetInfo(&info);
     std::cout << "VendorID: " << std::hex << info.vendorID << std::dec << "\n";
-    // std::cout << "Vendor: " << info.vendor << "\n";
-    // std::cout << "Architecture: " << info.architecture << "\n";
-    // std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
-    // std::cout << "Name: " << info.device << "\n";
-    // std::cout << "Driver description: " << info.description << "\n";
+    std::cout << "Vendor: " << info.vendor << "\n";
+    std::cout << "Architecture: " << info.architecture << "\n";
+    std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
+    std::cout << "Name: " << info.device << "\n";
+    std::cout << "Driver description: " << info.description << "\n";
 
     return 0;
 }
