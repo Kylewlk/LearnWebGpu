@@ -20,6 +20,7 @@ int main()
     }
     // Synchronously request the adapter.
     wgpu::RequestAdapterOptions options = {};
+    options.backendType = wgpu::BackendType::Vulkan;
     wgpu::Adapter adapter;
     wgpu::RequestAdapterCallbackInfo callbackInfo = {};
     callbackInfo.nextInChain = nullptr;
@@ -52,6 +53,12 @@ int main()
     std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
     std::cout << "Name: " << info.device << "\n";
     std::cout << "Driver description: " << info.description << "\n";
+    std::cout << "Backend: " << info.backendType << "\n";
+    std::cout << "Adapter Type: " << info.adapterType << "\n";
+
+    // adapter.GetFeatures()
+
+    std::cout << std::endl;
 
     return 0;
 }
