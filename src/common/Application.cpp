@@ -48,3 +48,20 @@ void Application::MainLoop() {
 bool Application::IsRunning() {
     return !glfwWindowShouldClose(window);
 }
+
+WGPUSurface Application::createWGPUSurface(WGPUInstance instance)
+{
+    HWND hwnd = glfwGetWin32Window(window);
+    HINSTANCE hinstance = GetModuleHandle(NULL);
+
+    WGPUSurfaceDescriptorFromWindowsHWND fromWindowsHWND{};
+    fromWindowsHWND.chain.next = nullptr;
+    fromWindowsHWND.chain.sType = WGPUSType_SurfaceSourceWindowsHWND;
+    fromWindowsHWND.hinstance = hinstance;
+    fromWindowsHWND.hwnd = hwnd;
+
+    WGPUSurfaceDescriptor surfaceDescriptor{};
+    surfaceDescriptor.nextInChain = &fromWindowsHWND.chain;
+
+    return wgpuInstanceCreateSurface(instance, &surfaceDescriptor);
+}

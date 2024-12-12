@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include <Windows.h>
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+#include <webgpu/webgpu.h>
 
 
 class Application {
@@ -21,7 +26,12 @@ public:
     // Return true as long as the main loop should keep on running
     bool IsRunning();
 
+    [[nodiscard]] GLFWwindow* GetWindow() const { return window; }
 
+    [[nodiscard]] HWND GetHWND() const { return glfwGetWin32Window(this->window); }
+
+
+    WGPUSurface createWGPUSurface(WGPUInstance instance);
 
 private:
 
