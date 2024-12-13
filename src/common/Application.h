@@ -12,6 +12,7 @@
 #include <webgpu/webgpu.h>
 
 
+
 class Application {
 public:
     // Initialize everything and return true if it went all right
@@ -30,13 +31,23 @@ public:
 
     [[nodiscard]] HWND GetHWND() const { return glfwGetWin32Window(this->window); }
 
+    void inspectAdapter() const;
+    void inspectDevice() const;
 
-    WGPUSurface createWGPUSurface(WGPUInstance instance);
+    WGPUTextureView getNextSurfaceTextureView();
+
 
 private:
 
+    void initWebGPU();
+
     GLFWwindow* window{};
 
+    WGPUInstance instance{};
+    WGPUAdapter adapter{};
+    WGPUDevice device{};
+    WGPUQueue queue{};
+    WGPUSurface surface{};
 };
 
 

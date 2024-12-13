@@ -17,6 +17,10 @@ int main()
         return 1;
     }
 
+    app.inspectAdapter();
+    std::cout << std::endl;
+    app.inspectDevice();
+
     // Warning: this is still not Emscripten-friendly, see below
     while (app.IsRunning()) {
         app.MainLoop();
