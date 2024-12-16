@@ -136,6 +136,7 @@ private:
         AdapterInfo adapterInfo{};
         this->adapter.GetInfo(&adapterInfo);
         std::cout << "Using Adapter: " << adapterInfo.device << std::endl;
+        std::cout << "Adapter Backend: " << adapterInfo.backendType << std::endl;
 
         DeviceDescriptor deviceDescriptor{};
         deviceDescriptor.SetDeviceLostCallback(CallbackMode::AllowSpontaneous,
@@ -225,6 +226,7 @@ private:
         vertexBufferLayout.attributeCount = 1;
         vertexBufferLayout.attributes = &positionAttrib;
         vertexBufferLayout.stepMode = VertexStepMode::Vertex;
+        vertexBufferLayout.arrayStride = sizeof(float) * 4;
 
         RenderPipelineDescriptor descriptor{};
         descriptor.vertex.bufferCount = 1;
