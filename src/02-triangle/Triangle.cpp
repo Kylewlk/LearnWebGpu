@@ -68,7 +68,7 @@ public:
         colorAttachment.view = texture.texture.CreateView();
         colorAttachment.loadOp = LoadOp::Clear;
         colorAttachment.storeOp = StoreOp::Store;
-        colorAttachment.clearValue = {0.9, 0.1, 0.2, 1.0};
+        colorAttachment.clearValue = {0.2, 0.2, 0.2, 1.0};
 
         RenderPassDescriptor renderPassDescriptor{};
         renderPassDescriptor.colorAttachments = &colorAttachment;
@@ -224,9 +224,9 @@ private:
         VertexBufferLayout vertexBufferLayout{};
         vertexBufferLayout.attributeCount = 1;
         vertexBufferLayout.attributes = &positionAttrib;
+        vertexBufferLayout.stepMode = VertexStepMode::Vertex;
 
         RenderPipelineDescriptor descriptor{};
-        descriptor.vertex.module = shaderModule;
         descriptor.vertex.bufferCount = 1;
         descriptor.vertex.buffers = &vertexBufferLayout;
 
