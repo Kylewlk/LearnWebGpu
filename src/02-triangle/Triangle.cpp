@@ -7,6 +7,7 @@
 
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <string>
 #include <GLFW/glfw3native.h>
 
 #include <webgpu/webgpu_cpp.h>
@@ -85,6 +86,18 @@ public:
         this->queue.Submit(1, &commands);
 
         this->surface.Present();
+
+        auto ctime = glfwGetTime();
+        ++frameCount;
+        if (ctime - frameTime > 1.0)
+        {
+            auto delay = ctime - frameTime;
+            auto fps = static_cast<int>(std::round(frameCount / delay));
+            auto title = std::string("Learn WebGPU Triangle-FPS: ") + std::to_string(fps);
+            glfwSetWindowTitle(window, title.c_str());
+            this->frameTime = ctime;
+            frameCount = 0;
+        }
     }
 
     // Return true as long as the main loop should keep on running
@@ -289,6 +302,9 @@ private:
 
     wgpu::Buffer vertexBuffer{};
     wgpu::RenderPipeline pipeline{};
+
+    double frameCount{0};
+    double frameTime{0};
 };
 
 
