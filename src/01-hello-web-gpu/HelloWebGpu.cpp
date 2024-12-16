@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <webgpu/webgpu_cpp.h>
+#include <dawn/native/DawnNative.h>
 #include <dawn/webgpu_cpp_print.h>
 
 int main()
@@ -21,6 +22,7 @@ int main()
     // Synchronously request the adapter.
     wgpu::RequestAdapterOptions options = {};
     options.backendType = wgpu::BackendType::Vulkan;
+    options.powerPreference = wgpu::PowerPreference::HighPerformance;
     wgpu::Adapter adapter;
     wgpu::RequestAdapterCallbackInfo callbackInfo = {};
     callbackInfo.nextInChain = nullptr;
@@ -40,6 +42,12 @@ int main()
         std::cerr << "RequestAdapter failed!\n";
         return EXIT_FAILURE;
     }
+
+    // auto nativeInstance = std::make_unique<dawn::native::Instance>();
+    // std::vector<dawn::native::Adapter> adapters = nativeInstance->EnumerateAdapters();
+    // for (const auto& ap : adapters) {
+    //     adapter = wgpu::Adapter(ap.Get());
+    // }
 
     wgpu::DawnAdapterPropertiesPowerPreference power_props{};
 
