@@ -46,6 +46,11 @@ public:
     // Uninitialize everything that was initialized
     void Terminate()
     {
+        this->vertexBuffer = nullptr;
+        this->pipeline = nullptr;
+
+        this->surface = nullptr;
+        this->queue =  nullptr;
         this->device = nullptr;
         this->adapter = nullptr;
         this->instance = nullptr;
