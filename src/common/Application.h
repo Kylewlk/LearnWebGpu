@@ -9,45 +9,55 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-#include <webgpu/webgpu.h>
-
+#include <webgpu/webgpu_cpp.h>
 
 
 class Application {
 public:
-    // Initialize everything and return true if it went all right
-    bool Initialize();
 
-    // Uninitialize everything that was initialized
-    void Terminate();
+    explicit Application(bool canResize);
+    virtual ~Application();
 
-    // Draw a frame and handle events
-    void MainLoop();
+    virtual void clean();
+    virtual void pollEvent();
+    virtual void render() = 0;
 
-    // Return true as long as the main loop should keep on running
-    bool IsRunning();
-
+    [[nodiscard]] bool IsRunning() const { return !glfwWindowShouldClose(window); }
     [[nodiscard]] GLFWwindow* GetWindow() const { return window; }
-
     [[nodiscard]] HWND GetHWND() const { return glfwGetWin32Window(this->window); }
+    [[nodiscard]] double getFps() const { return fps; }
+
+    void setTitle(std::string_view title);
+    void setTitleFps();
+    void setSize(int width, int height) const { glfwSetWindowSize(this->window, width, height); }
 
     void inspectAdapter() const;
     void inspectDevice() const;
 
-    WGPUTextureView getNextSurfaceTextureView();
+    [[nodiscard]] wgpu::TextureView getNextSurfaceTextureView() const;
 
+protected:
 
-private:
+    virtual void onResize(int width, int height);
 
-    void initWebGPU();
+    bool InitGLFW(bool canResize = false);
+    bool initWebGPU();
 
     GLFWwindow* window{};
+    std::string title {"Learn WebGPU"};
+    int width{640};
+    int height{480};
+    double frameCount{0};
+    double frameTime{0};
+    double fps{0};
 
-    WGPUInstance instance{};
-    WGPUAdapter adapter{};
-    WGPUDevice device{};
-    WGPUQueue queue{};
-    WGPUSurface surface{};
+    wgpu::Instance instance{};
+    wgpu::Adapter adapter{};
+    wgpu::Device device{};
+    wgpu::Queue queue{};
+    wgpu::Surface surface;
+    wgpu::TextureFormat surfaceFormat{wgpu::TextureFormat::BGRA8Unorm};
+
 };
 
 
