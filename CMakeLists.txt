@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 set(target_name LearnWebGPU)
 project(${target_name})
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 17)
 
 set(WEB_GPU_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/dawn/Release)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/libs/dawn/Debug/bin/webgpu_dawn.dll)
@@ -35,12 +37,15 @@ file(GLOB_RECURSE common_src LIST_DIRECTORIES false
         ${COMMON_DIR}/*.c
         ${COMMON_DIR}/*.cpp
 )
-add_library(common_lib INTERFACE)
-target_include_directories(common_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_sources(common_lib INTERFACE ${common_src})
-target_link_libraries(common_lib INTERFACE dawn::webgpu_dawn glfw)
-target_compile_options(common_lib INTERFACE "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-target_compile_definitions(common_lib INTERFACE CURRENT_WORKING_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(common_lib ${common_src})
+target_include_directories(common_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(common_lib PUBLIC dawn::webgpu_dawn glfw)
+target_compile_options(common_lib PUBLIC "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+target_compile_definitions(common_lib PUBLIC CURRENT_WORKING_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_subdirectory(src/01-hello-web-gpu)
-add_subdirectory(src/02-triangle)
+function(add_example name)
+    add_executable(${name} ${name}.cpp)
+    target_link_libraries(${name} common_lib)
+endfunction()
+
+add_subdirectory(src)
