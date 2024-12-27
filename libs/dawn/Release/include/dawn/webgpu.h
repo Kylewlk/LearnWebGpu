@@ -480,6 +480,12 @@ typedef enum WGPUExternalTextureRotation {
     WGPUExternalTextureRotation_Rotate270Degrees = 0x00000004,
     WGPUExternalTextureRotation_Force32 = 0x7FFFFFFF
 } WGPUExternalTextureRotation WGPU_ENUM_ATTRIBUTE;
+typedef enum WGPUFeatureLevel {
+    WGPUFeatureLevel_Undefined = 0x00000000,
+    WGPUFeatureLevel_Compatibility = 0x00000001,
+    WGPUFeatureLevel_Core = 0x00000002,
+    WGPUFeatureLevel_Force32 = 0x7FFFFFFF
+} WGPUFeatureLevel WGPU_ENUM_ATTRIBUTE;
 typedef enum WGPUFeatureName {
     WGPUFeatureName_DepthClipControl = 0x00000001,
     WGPUFeatureName_Depth32FloatStencil8 = 0x00000002,
@@ -551,6 +557,7 @@ typedef enum WGPUFeatureName {
     WGPUFeatureName_MultiDrawIndirect = 0x00050035,
     WGPUFeatureName_ClipDistances = 0x00050036,
     WGPUFeatureName_DawnTexelCopyBufferRowAlignment = 0x00050037,
+    WGPUFeatureName_FlexibleTextureViews = 0x00050038,
     WGPUFeatureName_Force32 = 0x7FFFFFFF
 } WGPUFeatureName WGPU_ENUM_ATTRIBUTE;
 typedef enum WGPUFilterMode {
@@ -1740,6 +1747,10 @@ typedef struct WGPULimits {
     uint32_t maxComputeWorkgroupSizeY;
     uint32_t maxComputeWorkgroupSizeZ;
     uint32_t maxComputeWorkgroupsPerDimension;
+    uint32_t maxStorageBuffersInVertexStage;
+    uint32_t maxStorageTexturesInVertexStage;
+    uint32_t maxStorageBuffersInFragmentStage;
+    uint32_t maxStorageTexturesInFragmentStage;
 } WGPULimits WGPU_STRUCTURE_ATTRIBUTE;
 
 #define WGPU_LIMITS_INIT WGPU_MAKE_INIT_STRUCT(WGPULimits, { \
@@ -1775,6 +1786,10 @@ typedef struct WGPULimits {
     /*.maxComputeWorkgroupSizeY=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
     /*.maxComputeWorkgroupSizeZ=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
     /*.maxComputeWorkgroupsPerDimension=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
+    /*.maxStorageBuffersInVertexStage=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
+    /*.maxStorageTexturesInVertexStage=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
+    /*.maxStorageBuffersInFragmentStage=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
+    /*.maxStorageTexturesInFragmentStage=*/WGPU_LIMIT_U32_UNDEFINED WGPU_COMMA \
 })
 
 typedef struct WGPUMemoryHeapInfo {
@@ -1824,13 +1839,11 @@ typedef struct WGPUOrigin3D {
 })
 
 typedef struct WGPUPipelineLayoutStorageAttachment {
-    WGPUChainedStruct const * nextInChain;
     uint64_t offset;
     WGPUTextureFormat format;
 } WGPUPipelineLayoutStorageAttachment WGPU_STRUCTURE_ATTRIBUTE;
 
 #define WGPU_PIPELINE_LAYOUT_STORAGE_ATTACHMENT_INIT WGPU_MAKE_INIT_STRUCT(WGPUPipelineLayoutStorageAttachment, { \
-    /*.nextInChain=*/nullptr WGPU_COMMA \
     /*.offset=*/0 WGPU_COMMA \
     /*.format=*/{} WGPU_COMMA \
 })
@@ -1964,6 +1977,7 @@ typedef struct WGPURequestAdapterCallbackInfo {
 typedef struct WGPURequestAdapterOptions {
     WGPUChainedStruct const * nextInChain;
     WGPU_NULLABLE WGPUSurface compatibleSurface;
+    WGPUFeatureLevel featureLevel;
     WGPUPowerPreference powerPreference;
     WGPUBackendType backendType;
     WGPUBool forceFallbackAdapter;
@@ -1973,6 +1987,7 @@ typedef struct WGPURequestAdapterOptions {
 #define WGPU_REQUEST_ADAPTER_OPTIONS_INIT WGPU_MAKE_INIT_STRUCT(WGPURequestAdapterOptions, { \
     /*.nextInChain=*/nullptr WGPU_COMMA \
     /*.compatibleSurface=*/nullptr WGPU_COMMA \
+    /*.featureLevel=*/WGPUFeatureLevel_Core WGPU_COMMA \
     /*.powerPreference=*/WGPUPowerPreference_Undefined WGPU_COMMA \
     /*.backendType=*/WGPUBackendType_Undefined WGPU_COMMA \
     /*.forceFallbackAdapter=*/false WGPU_COMMA \
@@ -3553,10 +3568,6 @@ typedef struct WGPURenderPipelineDescriptor {
     /*.multisample=*/WGPU_MULTISAMPLE_STATE_INIT WGPU_COMMA \
     /*.fragment=*/nullptr WGPU_COMMA \
 })
-
-// WGPUProgrammableStageDescriptor is deprecated.
-// Use WGPUComputeState instead.
-typedef WGPUComputeState WGPUProgrammableStageDescriptor;
 
 // WGPURenderPassDescriptorMaxDrawCount is deprecated.
 // Use WGPURenderPassMaxDrawCount instead.

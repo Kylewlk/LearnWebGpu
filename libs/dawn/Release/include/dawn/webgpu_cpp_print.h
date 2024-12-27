@@ -575,6 +575,23 @@ namespace wgpu {
       return o;
   }
   template <typename CharT, typename Traits>
+  std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& o, FeatureLevel value) {
+      switch (value) {
+      case FeatureLevel::Undefined:
+        o << "FeatureLevel::Undefined";
+        break;
+      case FeatureLevel::Compatibility:
+        o << "FeatureLevel::Compatibility";
+        break;
+      case FeatureLevel::Core:
+        o << "FeatureLevel::Core";
+        break;
+          default:
+            o << "FeatureLevel::" << std::showbase << std::hex << std::setfill('0') << std::setw(4) << static_cast<typename std::underlying_type<FeatureLevel>::type>(value);
+      }
+      return o;
+  }
+  template <typename CharT, typename Traits>
   std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& o, FeatureName value) {
       switch (value) {
       case FeatureName::DepthClipControl:
@@ -786,6 +803,9 @@ namespace wgpu {
         break;
       case FeatureName::DawnTexelCopyBufferRowAlignment:
         o << "FeatureName::DawnTexelCopyBufferRowAlignment";
+        break;
+      case FeatureName::FlexibleTextureViews:
+        o << "FeatureName::FlexibleTextureViews";
         break;
           default:
             o << "FeatureName::" << std::showbase << std::hex << std::setfill('0') << std::setw(4) << static_cast<typename std::underlying_type<FeatureName>::type>(value);

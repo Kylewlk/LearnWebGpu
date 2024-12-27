@@ -288,6 +288,14 @@ enum class ExternalTextureRotation : uint32_t {
 static_assert(sizeof(ExternalTextureRotation) == sizeof(WGPUExternalTextureRotation), "sizeof mismatch for ExternalTextureRotation");
 static_assert(alignof(ExternalTextureRotation) == alignof(WGPUExternalTextureRotation), "alignof mismatch for ExternalTextureRotation");
 
+enum class FeatureLevel : uint32_t {
+    Undefined = WGPUFeatureLevel_Undefined,
+    Compatibility = WGPUFeatureLevel_Compatibility,
+    Core = WGPUFeatureLevel_Core,
+};
+static_assert(sizeof(FeatureLevel) == sizeof(WGPUFeatureLevel), "sizeof mismatch for FeatureLevel");
+static_assert(alignof(FeatureLevel) == alignof(WGPUFeatureLevel), "alignof mismatch for FeatureLevel");
+
 enum class FeatureName : uint32_t {
     DepthClipControl = WGPUFeatureName_DepthClipControl,
     Depth32FloatStencil8 = WGPUFeatureName_Depth32FloatStencil8,
@@ -359,6 +367,7 @@ enum class FeatureName : uint32_t {
     MultiDrawIndirect = WGPUFeatureName_MultiDrawIndirect,
     ClipDistances = WGPUFeatureName_ClipDistances,
     DawnTexelCopyBufferRowAlignment = WGPUFeatureName_DawnTexelCopyBufferRowAlignment,
+    FlexibleTextureViews = WGPUFeatureName_FlexibleTextureViews,
 };
 static_assert(sizeof(FeatureName) == sizeof(WGPUFeatureName), "sizeof mismatch for FeatureName");
 static_assert(alignof(FeatureName) == alignof(WGPUFeatureName), "alignof mismatch for FeatureName");
@@ -2516,6 +2525,10 @@ struct Limits {
     uint32_t maxComputeWorkgroupSizeY = WGPU_LIMIT_U32_UNDEFINED;
     uint32_t maxComputeWorkgroupSizeZ = WGPU_LIMIT_U32_UNDEFINED;
     uint32_t maxComputeWorkgroupsPerDimension = WGPU_LIMIT_U32_UNDEFINED;
+    uint32_t maxStorageBuffersInVertexStage = WGPU_LIMIT_U32_UNDEFINED;
+    uint32_t maxStorageTexturesInVertexStage = WGPU_LIMIT_U32_UNDEFINED;
+    uint32_t maxStorageBuffersInFragmentStage = WGPU_LIMIT_U32_UNDEFINED;
+    uint32_t maxStorageTexturesInFragmentStage = WGPU_LIMIT_U32_UNDEFINED;
 };
 
 struct MemoryHeapInfo {
@@ -2552,7 +2565,6 @@ struct Origin3D {
 struct PipelineLayoutStorageAttachment {
     inline operator const WGPUPipelineLayoutStorageAttachment&() const noexcept;
 
-    ChainedStruct const * nextInChain = nullptr;
     uint64_t offset = 0;
     TextureFormat format;
 };
@@ -2650,6 +2662,7 @@ struct RequestAdapterOptions {
 
     ChainedStruct const * nextInChain = nullptr;
     Surface compatibleSurface = nullptr;
+    FeatureLevel featureLevel = FeatureLevel::Core;
     PowerPreference powerPreference = PowerPreference::Undefined;
     BackendType backendType = BackendType::Undefined;
     Bool forceFallbackAdapter = false;
@@ -4708,6 +4721,14 @@ static_assert(offsetof(Limits, maxComputeWorkgroupSizeZ) == offsetof(WGPULimits,
         "offsetof mismatch for Limits::maxComputeWorkgroupSizeZ");
 static_assert(offsetof(Limits, maxComputeWorkgroupsPerDimension) == offsetof(WGPULimits, maxComputeWorkgroupsPerDimension),
         "offsetof mismatch for Limits::maxComputeWorkgroupsPerDimension");
+static_assert(offsetof(Limits, maxStorageBuffersInVertexStage) == offsetof(WGPULimits, maxStorageBuffersInVertexStage),
+        "offsetof mismatch for Limits::maxStorageBuffersInVertexStage");
+static_assert(offsetof(Limits, maxStorageTexturesInVertexStage) == offsetof(WGPULimits, maxStorageTexturesInVertexStage),
+        "offsetof mismatch for Limits::maxStorageTexturesInVertexStage");
+static_assert(offsetof(Limits, maxStorageBuffersInFragmentStage) == offsetof(WGPULimits, maxStorageBuffersInFragmentStage),
+        "offsetof mismatch for Limits::maxStorageBuffersInFragmentStage");
+static_assert(offsetof(Limits, maxStorageTexturesInFragmentStage) == offsetof(WGPULimits, maxStorageTexturesInFragmentStage),
+        "offsetof mismatch for Limits::maxStorageTexturesInFragmentStage");
 
 // MemoryHeapInfo implementation
 
@@ -4775,8 +4796,6 @@ PipelineLayoutStorageAttachment::operator const WGPUPipelineLayoutStorageAttachm
 
 static_assert(sizeof(PipelineLayoutStorageAttachment) == sizeof(WGPUPipelineLayoutStorageAttachment), "sizeof mismatch for PipelineLayoutStorageAttachment");
 static_assert(alignof(PipelineLayoutStorageAttachment) == alignof(WGPUPipelineLayoutStorageAttachment), "alignof mismatch for PipelineLayoutStorageAttachment");
-static_assert(offsetof(PipelineLayoutStorageAttachment, nextInChain) == offsetof(WGPUPipelineLayoutStorageAttachment, nextInChain),
-        "offsetof mismatch for PipelineLayoutStorageAttachment::nextInChain");
 static_assert(offsetof(PipelineLayoutStorageAttachment, offset) == offsetof(WGPUPipelineLayoutStorageAttachment, offset),
         "offsetof mismatch for PipelineLayoutStorageAttachment::offset");
 static_assert(offsetof(PipelineLayoutStorageAttachment, format) == offsetof(WGPUPipelineLayoutStorageAttachment, format),
@@ -4962,6 +4981,8 @@ static_assert(offsetof(RequestAdapterOptions, nextInChain) == offsetof(WGPUReque
         "offsetof mismatch for RequestAdapterOptions::nextInChain");
 static_assert(offsetof(RequestAdapterOptions, compatibleSurface) == offsetof(WGPURequestAdapterOptions, compatibleSurface),
         "offsetof mismatch for RequestAdapterOptions::compatibleSurface");
+static_assert(offsetof(RequestAdapterOptions, featureLevel) == offsetof(WGPURequestAdapterOptions, featureLevel),
+        "offsetof mismatch for RequestAdapterOptions::featureLevel");
 static_assert(offsetof(RequestAdapterOptions, powerPreference) == offsetof(WGPURequestAdapterOptions, powerPreference),
         "offsetof mismatch for RequestAdapterOptions::powerPreference");
 static_assert(offsetof(RequestAdapterOptions, backendType) == offsetof(WGPURequestAdapterOptions, backendType),
@@ -9434,9 +9455,6 @@ using RequestDeviceCallback2 = typename dawn::wire::client::RequestDeviceCallbac
 template <typename... T>
 using UncapturedErrorCallback = typename dawn::wire::client::UncapturedErrorCallback<T...>;
 
-// ProgrammableStageDescriptor is deprecated.
-// Use ComputeState instead.
-using ProgrammableStageDescriptor = ComputeState;
 // RenderPassDescriptorMaxDrawCount is deprecated.
 // Use RenderPassMaxDrawCount instead.
 using RenderPassDescriptorMaxDrawCount = RenderPassMaxDrawCount;
