@@ -19,6 +19,8 @@ public:
 
     void clean() override
     {
+        this->msaaTexture = nullptr;
+        this->vertexBuffer = nullptr;
         this->pipeline = nullptr;
 
         Application::clean();
@@ -27,24 +29,34 @@ public:
     bool setup()
     {
         using namespace wgpu;
-        constexpr const char* shaderCode = R"(
-            @vertex
-            fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-                var p = vec2f(0.0, 0.0);
-                if (in_vertex_index == 0u) {
-                    p = vec2f(-0.5, -0.5);
-                } else if (in_vertex_index == 1u) {
-                    p = vec2f(0.5, -0.5);
-                } else {
-                    p = vec2f(0.0, 0.5);
-                }
-                return vec4f(p, 0.0, 1.0);
-            }
 
-            @fragment
-            fn fs_main() -> @location(0) vec4f {
-                return vec4f(1.0, 0.0, 0.0, 1.0);
-            }
+        TextureDescriptor texDescriptor;
+        texDescriptor.size = { static_cast<uint32_t>(this->width), static_cast<uint32_t>(this->height)};
+        texDescriptor.format = surfaceFormat;
+        texDescriptor.sampleCount = sampleCount;
+        texDescriptor.usage = TextureUsage::RenderAttachment;
+        texDescriptor.dimension = TextureDimension::e2D;
+        this->msaaTexture = device.CreateTexture(&texDescriptor);
+
+        static const float vertexData[12] = {
+            0.0f, 0.8f, 0.0f, 1.0f,
+            -0.2f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, 0.0f, 1.0f,
+        };
+        BufferDescriptor vertexBufferDescriptor{};
+        vertexBufferDescriptor.usage = BufferUsage::CopyDst | BufferUsage::Vertex;
+        vertexBufferDescriptor.size = sizeof(vertexData);
+        vertexBuffer = this->device.CreateBuffer(&vertexBufferDescriptor);
+        queue.WriteBuffer(vertexBuffer, 0, vertexData, sizeof(vertexData));
+
+        constexpr const char* shaderCode = R"(
+        @vertex fn vs(@location(0) pos : vec4f) -> @builtin(position) vec4f {
+            return pos;
+        }
+
+        @fragment fn fs(@builtin(position) FragCoord : vec4f) -> @location(0) vec4f {
+            return vec4f(1, 0, 0, 1);
+        }
         )";
         ShaderModuleWGSLDescriptor shaderCodeDescriptor{};
         shaderCodeDescriptor.code = shaderCode;
@@ -52,12 +64,22 @@ public:
         shaderDescriptor.nextInChain = &shaderCodeDescriptor;
         auto shaderModule = this->device.CreateShaderModule(&shaderDescriptor);
 
+        VertexAttribute positionAttrib{};
+        positionAttrib.shaderLocation = 0;
+        positionAttrib.format = VertexFormat::Float32x4;
+        positionAttrib.offset = 0;
+        VertexBufferLayout vertexBufferLayout{};
+        vertexBufferLayout.attributeCount = 1;
+        vertexBufferLayout.attributes = &positionAttrib;
+        vertexBufferLayout.stepMode = VertexStepMode::Vertex;
+        vertexBufferLayout.arrayStride = sizeof(float) * 4;
+
         RenderPipelineDescriptor descriptor{};
-        descriptor.vertex.bufferCount = 0;
-        descriptor.vertex.buffers = nullptr;
+        descriptor.vertex.bufferCount = 1;
+        descriptor.vertex.buffers = &vertexBufferLayout;
 
         descriptor.vertex.module = shaderModule;
-        descriptor.vertex.entryPoint = "vs_main";
+        descriptor.vertex.entryPoint = "vs";
         descriptor.vertex.constantCount = 0;
         descriptor.vertex.constants = nullptr;
 
@@ -68,7 +90,7 @@ public:
 
         FragmentState fragmentState;
         fragmentState.module = shaderModule;
-        fragmentState.entryPoint = "fs_main";
+        fragmentState.entryPoint = "fs";
         fragmentState.constantCount = 0;
         fragmentState.constants = nullptr;
 
@@ -82,7 +104,7 @@ public:
 
         ColorTargetState colorTarget;
         colorTarget.format = surfaceFormat;
-        colorTarget.blend = &blendState;
+        // colorTarget.blend = &blendState;
         colorTarget.writeMask = ColorWriteMask::All; // We could write to only some of the color channels.
 
         fragmentState.targetCount = 1;
@@ -91,7 +113,7 @@ public:
 
         descriptor.depthStencil = nullptr;
 
-        descriptor.multisample.count = 1;
+        descriptor.multisample.count = 4;
         descriptor.multisample.mask = ~0u;
         descriptor.multisample.alphaToCoverageEnabled = false;
 
@@ -109,7 +131,8 @@ public:
         using namespace wgpu;
 
         RenderPassColorAttachment colorAttachment{};
-        colorAttachment.view = this->getNextSurfaceTextureView();
+        colorAttachment.view = this->msaaTexture.CreateView();
+        colorAttachment.resolveTarget = this->getNextSurfaceTextureView();
         colorAttachment.loadOp = LoadOp::Clear;
         colorAttachment.storeOp = StoreOp::Store;
         colorAttachment.clearValue = {0.2, 0.2, 0.2, 1.0};
@@ -122,6 +145,7 @@ public:
 
         auto pass = encoder.BeginRenderPass(&renderPassDescriptor);
         pass.SetPipeline(pipeline);
+        pass.SetVertexBuffer(0, vertexBuffer);
         pass.Draw(3);
         pass.End();
         auto commands =  encoder.Finish();
@@ -132,7 +156,10 @@ public:
         this->setTitleFps();
     }
 
+    wgpu::Buffer vertexBuffer{};
     wgpu::RenderPipeline pipeline{};
+    wgpu::Texture msaaTexture{};
+    int sampleCount = 4;
 };
 
 

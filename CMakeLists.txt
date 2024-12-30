@@ -48,4 +48,4 @@ function(add_example name)
     target_link_libraries(${name} common_lib)
 endfunction()
 
-add_subdirectory(src)
+add_subdirectory(src/basic basic)

@@ -8,3 +8,4 @@ set(CMAKE_C_STANDARD 17)
 
 add_example(01-HelloWebGpu)
 add_example(02-Triangle)
+add_example(03-TriangleMSAA)
