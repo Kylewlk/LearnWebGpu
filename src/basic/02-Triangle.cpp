@@ -28,22 +28,30 @@ public:
     {
         using namespace wgpu;
         constexpr const char* shaderCode = R"(
+            struct VertexOutput {
+              @builtin(position) Position : vec4f,
+              @location(0) fragColor: vec4f,
+            }
+
             @vertex
-            fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
-                var p = vec2f(0.0, 0.0);
+            fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
+                var output : VertexOutput;
                 if (in_vertex_index == 0u) {
-                    p = vec2f(-0.5, -0.5);
+                    output.Position = vec4f(-0.5, -0.5, 0.0, 1.0);
+                    output.fragColor = vec4f(1.0, 0.0, 0.0, 1.0);
                 } else if (in_vertex_index == 1u) {
-                    p = vec2f(0.5, -0.5);
+                    output.Position = vec4f(0.5, -0.5, 0.0, 1.0);
+                    output.fragColor = vec4f(0.0, 1.0, 0.0, 1.0);
                 } else {
-                    p = vec2f(0.0, 0.5);
+                    output.Position = vec4f(0.0, 0.5, 0.0, 1.0);
+                    output.fragColor = vec4f(0.0, 0.0, 1.0, 1.0);
                 }
-                return vec4f(p, 0.0, 1.0);
+                return output;
             }
 
             @fragment
-            fn fs_main() -> @location(0) vec4f {
-                return vec4f(1.0, 0.0, 0.0, 1.0);
+            fn fs_main( @location(0) fragColor: vec4f ) -> @location(0) vec4f {
+                return fragColor;
             }
         )";
         ShaderModuleWGSLDescriptor shaderCodeDescriptor{};
