@@ -2,16 +2,14 @@
 // Created by DELL on 2024/12/11.
 //
 
-#include <iostream>
-#include <string>
-
+#include <format>
 #include <common/Application.h>
 
 class TriangleApplication : public Application
 {
 public:
 
-    TriangleApplication() : Application(false)
+    TriangleApplication() : Application(false, __FILE__)
     {
         this->setup();
     }

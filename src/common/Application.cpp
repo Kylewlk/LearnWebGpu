@@ -6,13 +6,39 @@
 #include <dawn/webgpu_cpp_print.h>
 
 #include <format>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 
-Application::Application(bool canResize)
+/// @example is the cpp file
+Application::Application(bool canResize, std::string_view example)
 {
+    int separatorIndex{0};
+    int dotIndex{0};
+    for (auto i = static_cast<int>(example.size()) - 1; i >= 0; i--)
+    {
+        if (example[i] == '.')
+        {
+            dotIndex = i;
+        }
+        else if (example[i] == '\\' || example[i] == '/')
+        {
+            separatorIndex = i;
+            break;
+        }
+    }
+
+    this->exampleName = example.substr(separatorIndex + 1, dotIndex - separatorIndex - 1);
+    if (!this->exampleName.empty())
+    {
+        this->title += '-';
+        this->title += exampleName;
+    }
+    this->exampleDir = example.substr(0, separatorIndex);
     this->InitGLFW(canResize);
     this->initWebGPU();
+    this->loadShaderModule();
 }
 
 Application::~Application()
@@ -138,6 +164,31 @@ bool Application::initWebGPU()
     return true;
 }
 
+void Application::loadShaderModule()
+{
+    std::string shaderFile = this->exampleDir;
+    shaderFile += '/';
+    shaderFile += this->exampleName;
+    shaderFile += ".wgsl";
+
+    if (this->device == nullptr || !std::filesystem::exists(shaderFile))
+    {
+        return;
+    }
+
+    std::ifstream file(shaderFile, std::ios::binary);
+    file.seekg(0, std::ios::end);
+    auto fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::string sourceCode(fileSize, '\0');
+    file.read(sourceCode.data(), fileSize);
+    file.close();
+
+    this->shaderModule = createShaderModule(this->device, sourceCode);
+
+    std::cout << "Loaded shader file: " << shaderFile << std::endl;
+}
+
 void Application::onResize(int width, int height)
 {
     this->width = width;
@@ -146,6 +197,7 @@ void Application::onResize(int width, int height)
 
 void Application::clean() {
 
+    this->shaderModule = nullptr;
     this->surface = nullptr;
     this->queue =  nullptr;
     this->device = nullptr;

@@ -46,6 +46,7 @@ target_compile_definitions(common_lib PUBLIC CURRENT_WORKING_DIR="${CMAKE_CURREN
 function(add_example name)
     add_executable(${name} ${name}.cpp)
     target_link_libraries(${name} common_lib)
+    target_compile_definitions(${name} PUBLIC EXAMPLE_NAME="${name}")
 endfunction()
 
 add_subdirectory(src/basic basic)

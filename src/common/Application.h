@@ -10,12 +10,13 @@
 #include <GLFW/glfw3native.h>
 
 #include <webgpu/webgpu_cpp.h>
+#include "Utils.h"
 
 
 class Application {
 public:
 
-    explicit Application(bool canResize);
+    Application(bool canResize, std::string_view example);
     virtual ~Application();
 
     virtual void clean();
@@ -42,9 +43,12 @@ protected:
 
     bool InitGLFW(bool canResize = false);
     bool initWebGPU();
+    void loadShaderModule();
 
     GLFWwindow* window{};
     std::string title {"Learn WebGPU"};
+    std::string exampleDir{};
+    std::string exampleName{};
     int width{640};
     int height{480};
     double frameCount{0};
@@ -55,6 +59,7 @@ protected:
     wgpu::Adapter adapter{};
     wgpu::Device device{};
     wgpu::Queue queue{};
+    wgpu::ShaderModule shaderModule{};
     wgpu::Surface surface;
     wgpu::TextureFormat surfaceFormat{wgpu::TextureFormat::BGRA8Unorm};
 
