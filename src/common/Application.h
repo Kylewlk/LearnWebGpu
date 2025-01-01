@@ -11,6 +11,7 @@
 
 #include <webgpu/webgpu_cpp.h>
 #include "Utils.h"
+#include "MathHelp.h"
 
 
 class Application {

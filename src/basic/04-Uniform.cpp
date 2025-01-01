@@ -11,6 +11,12 @@
 class TriangleApplication : public Application
 {
 public:
+    struct Uniforms
+    {
+        math::Mat4 mvp{};
+        math::Vec4 color{};
+    };
+
 
     TriangleApplication() : Application(false, __FILE__)
     {
@@ -20,6 +26,8 @@ public:
 
     void clean() override
     {
+        this->bindGroup = nullptr;
+        this->uniformBuffer = nullptr;
         this->msaaTexture = nullptr;
         this->vertexBuffer = nullptr;
         this->pipeline = nullptr;
@@ -40,15 +48,19 @@ public:
         this->msaaTexture = device.CreateTexture(&texDescriptor);
 
         static const float vertexData[12] = {
-            0.0f, 0.8f, 0.0f, 1.0f,
-            -0.2f, -0.5f, 0.0f, 1.0f,
+            0.0f, 0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.0f, 1.0f,
             0.5f, -0.5f, 0.0f, 1.0f,
         };
-        BufferDescriptor vertexBufferDescriptor{};
-        vertexBufferDescriptor.usage = BufferUsage::CopyDst | BufferUsage::Vertex;
-        vertexBufferDescriptor.size = sizeof(vertexData);
-        vertexBuffer = this->device.CreateBuffer(&vertexBufferDescriptor);
+        BufferDescriptor bufferDescriptor{};
+        bufferDescriptor.usage = BufferUsage::CopyDst | BufferUsage::Vertex;
+        bufferDescriptor.size = sizeof(vertexData);
+        vertexBuffer = this->device.CreateBuffer(&bufferDescriptor);
         queue.WriteBuffer(vertexBuffer, 0, vertexData, sizeof(vertexData));
+
+        bufferDescriptor.usage = BufferUsage::CopyDst | BufferUsage::Uniform;
+        bufferDescriptor.size = sizeof(Uniforms);
+        this->uniformBuffer = this->device.CreateBuffer(&bufferDescriptor);
 
         VertexAttribute positionAttrib{};
         positionAttrib.shaderLocation = 0;
@@ -103,9 +115,39 @@ public:
         descriptor.multisample.mask = ~0u;
         descriptor.multisample.alphaToCoverageEnabled = false;
 
-        descriptor.layout = nullptr;
+        BindGroupLayoutEntry bindEntry;
+        bindEntry.binding = 0;
+        bindEntry.visibility = ShaderStage::Vertex | ShaderStage::Fragment;
+        bindEntry.buffer.type = BufferBindingType::Uniform;
+        bindEntry.buffer.minBindingSize = sizeof(Uniforms);
+
+        BindGroupLayoutDescriptor bgLayoutDescriptor{};
+        bgLayoutDescriptor.entryCount = 1;
+        bgLayoutDescriptor.entries = &bindEntry;
+
+        BindGroupLayout bindGroupLayout = device.CreateBindGroupLayout(&bgLayoutDescriptor);
+
+        PipelineLayoutDescriptor pipelineLayoutDescriptor{};
+        pipelineLayoutDescriptor.bindGroupLayoutCount = 1;
+        pipelineLayoutDescriptor.bindGroupLayouts = &bindGroupLayout;
+
+        descriptor.layout = device.CreatePipelineLayout(&pipelineLayoutDescriptor);;
 
         pipeline = device.CreateRenderPipeline(&descriptor);
+
+
+        // Binding Group
+        BindGroupEntry bgEntry{};
+        bgEntry.binding = 0;
+        bgEntry.buffer = this->uniformBuffer;
+        bgEntry.offset = 0;
+        bgEntry.size = sizeof(Uniforms);
+
+        BindGroupDescriptor bgDescriptor{};
+        bgDescriptor.entryCount = 1;
+        bgDescriptor.entries = &bgEntry;
+        bgDescriptor.layout = bindGroupLayout;
+        this->bindGroup = device.CreateBindGroup(&bgDescriptor);
 
         return true;
     }
@@ -115,6 +157,12 @@ public:
         glfwPollEvents();
 
         using namespace wgpu;
+
+        // update Uniform;
+        Uniforms uniforms;
+        uniforms.mvp = math::Identity;
+        uniforms.color = math::Vec4{ 0.0f, 1.0f, 1.0f, 1.0f };
+        this->queue.WriteBuffer(uniformBuffer, 0, &uniforms, sizeof(uniforms));
 
         RenderPassColorAttachment colorAttachment{};
         colorAttachment.view = this->msaaTexture.CreateView();
@@ -132,6 +180,7 @@ public:
         auto pass = encoder.BeginRenderPass(&renderPassDescriptor);
         pass.SetPipeline(pipeline);
         pass.SetVertexBuffer(0, vertexBuffer);
+        pass.SetBindGroup(0, bindGroup);
         pass.Draw(3);
         pass.End();
         auto commands =  encoder.Finish();
@@ -146,6 +195,9 @@ public:
     wgpu::RenderPipeline pipeline{};
     wgpu::Texture msaaTexture{};
     int sampleCount = 4;
+
+    wgpu::BindGroup bindGroup;
+    wgpu::Buffer uniformBuffer;
 };
 
 
