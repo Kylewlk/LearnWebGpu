@@ -160,7 +160,12 @@ public:
 
         // update Uniform;
         Uniforms uniforms;
-        uniforms.mvp = math::Identity;
+        auto rotation = static_cast<float>(glfwGetTime() / 10) * math::pi_2;
+        rotation = std::fmod(rotation, math::pi_2);
+        math::Mat4 aspect = math::scale({float(height)/float(width), 1, 1});
+        uniforms.mvp = aspect * math::translate({-0.5f, 0.0f, 0.0f})
+                                * math::rotateZ(rotation)
+                                * math::scale({0.5f, 0.5f, 1.0f});
         uniforms.color = math::Vec4{ 0.0f, 1.0f, 1.0f, 1.0f };
         this->queue.WriteBuffer(uniformBuffer, 0, &uniforms, sizeof(uniforms));
 
