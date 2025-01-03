@@ -227,10 +227,10 @@ public:
         using namespace wgpu;
 
         // update Uniform;
-        auto rotation = static_cast<float>(glfwGetTime() / 10) * math::pi_2;
-        rotation = std::fmod(rotation, math::pi_2);
         math::Mat4 aspect = math::scale({float(height)/float(width), 1, 1});
-        math::Mat4 mvp = math::Identity;
+        float imageWidth = float(imageTexture.GetWidth());
+        float imageHeight = float(imageTexture.GetHeight());
+        math::Mat4 mvp = aspect * math::scale({float(imageWidth)/float(imageHeight), 1, 1});
         this->queue.WriteBuffer(uniformBuffer, 0, &mvp, sizeof(mvp));
 
         RenderPassColorAttachment colorAttachment{};
