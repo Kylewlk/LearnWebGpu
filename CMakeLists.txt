@@ -58,10 +58,11 @@ add_library(common_lib ${common_src})
 target_include_directories(common_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src ${THIRD_LIB_DIR}/include)
 target_link_libraries(common_lib PUBLIC dawn::webgpu_dawn glfw)
 if (MAC)
-   target_link_libraries(common_lib PUBLIC "-framework Metal" "-framework QuartzCore")
+#   target_link_libraries(common_lib PUBLIC "-framework Metal" "-framework QuartzCore")
 endif ()
 
-target_compile_options(common_lib PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/utf-8>> )
+target_compile_options(common_lib PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-command-line-argument>)
 target_compile_definitions(common_lib PUBLIC CURRENT_WORKING_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 function(add_example name)
