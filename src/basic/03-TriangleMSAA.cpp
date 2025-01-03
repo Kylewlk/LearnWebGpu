@@ -167,7 +167,7 @@ int main()
     // app.inspectAdapter();
     // app.inspectDevice();
 
-    while (app.IsRunning()) {
+    while (app.isRunning()) {
         app.pollEvent();
         app.render();
     }

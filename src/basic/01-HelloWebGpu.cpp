@@ -21,7 +21,11 @@ int main()
     }
     // Synchronously request the adapter.
     wgpu::RequestAdapterOptions options = {};
+#if defined(_WIN32)
     options.backendType = wgpu::BackendType::Vulkan;
+#elif defined(__APPLE__)
+    options.backendType = wgpu::BackendType::Metal;
+#endif
     options.powerPreference = wgpu::PowerPreference::HighPerformance;
     wgpu::Adapter adapter;
     wgpu::RequestAdapterCallbackInfo callbackInfo = {};

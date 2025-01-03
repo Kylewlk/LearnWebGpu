@@ -3,10 +3,14 @@
 //
 
 #pragma once
-
+#if defined(_WIN32)
 #include <Windows.h>
-#include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
+#elif defined(__APPLE__)
+#define GLFW_EXPOSE_NATIVE_COCOA
+#endif
+
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 #include <webgpu/webgpu_cpp.h>
@@ -24,10 +28,16 @@ public:
     virtual void pollEvent();
     virtual void render() = 0;
 
-    [[nodiscard]] bool IsRunning() const { return !glfwWindowShouldClose(window); }
-    [[nodiscard]] GLFWwindow* GetWindow() const { return window; }
-    [[nodiscard]] HWND GetHWND() const { return glfwGetWin32Window(this->window); }
-    [[nodiscard]] double getFps() const { return fps; }
+    [[nodiscard]] bool isRunning() const { return !glfwWindowShouldClose(window); }
+    [[nodiscard]] GLFWwindow* getWindow() const { return window; }
+
+#if defined(_WIN32)
+   [[nodiscard]] HWND GetHWND() const { return glfwGetWin32Window(this->window); }
+#elif defined(__APPLE__)
+    [[nodiscard]] id getNativeWindow() const { return glfwGetCocoaWindow(this->window); }
+#endif
+
+     [[nodiscard]] double getFps() const { return fps; }
 
     void setTitle(std::string_view title);
     void setTitleFps();
@@ -42,8 +52,9 @@ protected:
 
     virtual void onResize(int width, int height);
 
-    bool InitGLFW(bool canResize = false);
+    bool initGLFW(bool canResize = false);
     bool initWebGPU();
+    void initSurface();
     void loadShaderModule();
 
     GLFWwindow* window{};

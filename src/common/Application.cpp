@@ -36,8 +36,9 @@ Application::Application(bool canResize, std::string_view example)
         this->title += exampleName;
     }
     this->exampleDir = example.substr(0, separatorIndex);
-    this->InitGLFW(canResize);
+    this->initGLFW(canResize);
     this->initWebGPU();
+    this->initSurface();
     this->loadShaderModule();
 }
 
@@ -46,7 +47,7 @@ Application::~Application()
     Application::clean();
 }
 
-bool Application::InitGLFW(bool canResize) {
+bool Application::initGLFW(bool canResize) {
 
     glfwSetErrorCallback([](int error, const char* description) {
         std::cerr << "GLFW error: " << error << ",  " << description << std::endl;
@@ -82,7 +83,11 @@ bool Application::initWebGPU()
     this->instance = CreateInstance(&instanceDescriptor);
 
     RequestAdapterOptions adapterOptions{};
-    adapterOptions.backendType = BackendType::Vulkan;
+#if defined(_WIN32)
+    options.backendType = wgpu::BackendType::Vulkan;
+#elif defined(__APPLE__)
+    adapterOptions.backendType = wgpu::BackendType::Metal;
+#endif
     adapterOptions.powerPreference = PowerPreference::HighPerformance;
     auto requestAdapterFuture =
         instance.RequestAdapter(&adapterOptions, CallbackMode::WaitAnyOnly,
@@ -139,11 +144,26 @@ bool Application::initWebGPU()
         return false;
     }
 
+    return true;
+}
+
+void Application::initSurface()
+{
+    using namespace wgpu;
+    SurfaceDescriptor surfaceDescriptor{};
+
+#if defined(_WIN32)
     SurfaceSourceWindowsHWND surfaceSourceWindowsHwnd{};
     surfaceSourceWindowsHwnd.hwnd = glfwGetWin32Window(window);
     surfaceSourceWindowsHwnd.hinstance = GetModuleHandleW(nullptr);
-    SurfaceDescriptor surfaceDescriptor{};
     surfaceDescriptor.nextInChain = &surfaceSourceWindowsHwnd;
+#elif defined(__APPLE__)
+    // SetupWindowAndGetSurfaceDescriptorCocoa defined in GLFWUtils_metal.mm
+    std::unique_ptr<wgpu::ChainedStruct, void (*)(wgpu::ChainedStruct*)> SetupWindowAndGetSurfaceDescriptorCocoa(GLFWwindow* window);
+    auto chainedDescriptor = SetupWindowAndGetSurfaceDescriptorCocoa(window);
+    surfaceDescriptor.nextInChain = chainedDescriptor.get();
+#endif
+
     this->surface = instance.CreateSurface(&surfaceDescriptor);
 
     SurfaceCapabilities capabilities;
@@ -161,7 +181,6 @@ bool Application::initWebGPU()
     std::cout << "Surface size: " << width << ", " << height << std::endl;
     std::cout << "Surface format: " << config.format << std::endl;
 
-    return true;
 }
 
 void Application::loadShaderModule()
