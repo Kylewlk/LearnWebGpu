@@ -74,6 +74,7 @@ protected:
     wgpu::ShaderModule shaderModule{};
     wgpu::Surface surface;
     wgpu::TextureFormat surfaceFormat{wgpu::TextureFormat::BGRA8Unorm};
+    wgpu::Limits deviceLimits{};
 
 };
 

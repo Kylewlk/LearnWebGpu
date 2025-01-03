@@ -58,8 +58,10 @@ public:
         vertexBuffer = this->device.CreateBuffer(&bufferDescriptor);
         queue.WriteBuffer(vertexBuffer, 0, vertexData, sizeof(vertexData));
 
+        uniformSize = ceilToNextMultiple(sizeof(Uniforms), deviceLimits.minUniformBufferOffsetAlignment);
+        std::cout << "Uniform Size: " << uniformSize << std::endl;
         bufferDescriptor.usage = BufferUsage::CopyDst | BufferUsage::Uniform;
-        bufferDescriptor.size = sizeof(Uniforms);
+        bufferDescriptor.size =  uniformSize * 2;
         this->uniformBuffer = this->device.CreateBuffer(&bufferDescriptor);
 
         VertexAttribute positionAttrib{};
@@ -120,6 +122,7 @@ public:
         bindEntry.visibility = ShaderStage::Vertex | ShaderStage::Fragment;
         bindEntry.buffer.type = BufferBindingType::Uniform;
         bindEntry.buffer.minBindingSize = sizeof(Uniforms);
+        bindEntry.buffer.hasDynamicOffset = true;
 
         BindGroupLayoutDescriptor bgLayoutDescriptor{};
         bgLayoutDescriptor.entryCount = 1;
@@ -169,6 +172,12 @@ public:
         uniforms.color = math::Vec4{ 0.0f, 1.0f, 1.0f, 1.0f };
         this->queue.WriteBuffer(uniformBuffer, 0, &uniforms, sizeof(uniforms));
 
+        uniforms.mvp = aspect * math::translate({0.5f, 0.0f, 0.0f})
+                                * math::rotateZ(rotation)
+                                * math::scale({0.5f, 0.5f, 1.0f});
+        uniforms.color = math::Vec4{ 1.0f, 0.0f, 0.0f, 1.0f };
+        this->queue.WriteBuffer(uniformBuffer, uniformSize, &uniforms, sizeof(uniforms));
+
         RenderPassColorAttachment colorAttachment{};
         colorAttachment.view = this->msaaTexture.CreateView();
         colorAttachment.resolveTarget = this->getNextSurfaceTextureView();
@@ -185,8 +194,15 @@ public:
         auto pass = encoder.BeginRenderPass(&renderPassDescriptor);
         pass.SetPipeline(pipeline);
         pass.SetVertexBuffer(0, vertexBuffer);
-        pass.SetBindGroup(0, bindGroup);
+
+        uint32_t dynamicOffset = 0;
+        pass.SetBindGroup(0, bindGroup, 1, &dynamicOffset);
         pass.Draw(3);
+
+        dynamicOffset = uniformSize;
+        pass.SetBindGroup(0, bindGroup, 1, &dynamicOffset);
+        pass.Draw(3);
+
         pass.End();
         auto commands =  encoder.Finish();
         this->queue.Submit(1, &commands);
@@ -203,6 +219,7 @@ public:
 
     wgpu::BindGroup bindGroup;
     wgpu::Buffer uniformBuffer;
+    size_t uniformSize = sizeof(Uniforms);
 };
 
 

@@ -144,6 +144,10 @@ bool Application::initWebGPU()
         return false;
     }
 
+    SupportedLimits supportedLimits;
+    device.GetLimits(&supportedLimits);
+    this->deviceLimits = supportedLimits.limits;
+
     return true;
 }
 
