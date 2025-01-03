@@ -7,6 +7,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 wgpu::ShaderModule createShaderModule(const wgpu::Device& device, std::string_view source);
+wgpu::Texture loadTexture(const wgpu::Device& device, const wgpu::Queue& queue, std::string_view filename);
 
 template <typename T, typename U,  typename = std::enable_if_t<std::is_integral_v<T> && std::is_integral_v<U>>>
 constexpr T ceilToNextMultiple(T value, U step)
