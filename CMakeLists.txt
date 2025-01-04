@@ -21,14 +21,14 @@ set(THIRD_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
 
 set(WEB_GPU_DIR ${THIRD_LIB_DIR}/dawn/${SYSTEM_DIR}/Release)
-if (EXISTS ${THIRD_LIB_DIR}/dawn/${SYSTEM_DIR}/Debug/bin/webgpu_dawn.dll)
+if (EXISTS ${THIRD_LIB_DIR}/dawn/${SYSTEM_DIR}/Debug/include/dawn/webgpu.h)
     set(WEB_GPU_DIR ${THIRD_LIB_DIR}/dawn/${SYSTEM_DIR}/Debug)
     message(STATUS "Use Debug dawn: ${WEB_GPU_DIR}")
 endif ()
 find_package(Dawn REQUIRED CONFIG HINTS ${WEB_GPU_DIR})
 
 set(GLFW_DIR ${THIRD_LIB_DIR}/glfw/${SYSTEM_DIR}/Release)
-if (EXISTS ${THIRD_LIB_DIR}/glfw/${SYSTEM_DIR}/Debug/lib/glfw3.lib)
+if (EXISTS ${THIRD_LIB_DIR}/glfw/${SYSTEM_DIR}/Debug/include/GLFW/glfw3.h)
     set(GLFW_DIR ${THIRD_LIB_DIR}/glfw/${SYSTEM_DIR}/Debug)
     message(STATUS "Use Debug glfw: ${GLFW_DIR}")
 endif ()

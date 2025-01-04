@@ -84,7 +84,7 @@ bool Application::initWebGPU()
 
     RequestAdapterOptions adapterOptions{};
 #if defined(_WIN32)
-    options.backendType = wgpu::BackendType::Vulkan;
+    adapterOptions.backendType = wgpu::BackendType::Vulkan;
 #elif defined(__APPLE__)
     adapterOptions.backendType = wgpu::BackendType::Metal;
 #endif

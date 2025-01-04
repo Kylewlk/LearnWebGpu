@@ -2,8 +2,7 @@
 !*.lib
 !*.dll
 
-dawn/Debug/*
-glfw/Debug/*
+Debug
 
 
 !.gitkeep

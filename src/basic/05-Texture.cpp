@@ -5,6 +5,7 @@
 #include <format>
 #include <filesystem>
 #include <iostream>
+#include <array>
 #include <string>
 
 #include <common/Application.h>
